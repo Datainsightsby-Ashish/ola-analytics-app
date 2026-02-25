@@ -3,16 +3,13 @@ import streamlit.components.v1 as components
 import pandas as pd
 
 # ---------------------------------------------------------
-# PAGE CONFIGURATION
+# PAGE CONFIG
 # ---------------------------------------------------------
 st.set_page_config(
     page_title="Ride Operations & Revenue Intelligence",
     layout="wide"
 )
 
-# ---------------------------------------------------------
-# HEADER
-# ---------------------------------------------------------
 st.title("Ride Operations & Revenue Intelligence Dashboard")
 st.markdown(
     "Operational performance analytics integrating structured ride data with executive-level BI reporting."
@@ -21,11 +18,12 @@ st.markdown(
 st.divider()
 
 # ---------------------------------------------------------
-# LOAD DATA
+# LOAD DATA (CACHED)
 # ---------------------------------------------------------
 @st.cache_data
 def load_data():
-    return pd.read_csv("ola_cleaned.csv")
+    df = pd.read_csv("ola_cleaned.csv")
+    return df
 
 df = load_data()
 
@@ -34,42 +32,37 @@ df = load_data()
 # ---------------------------------------------------------
 st.sidebar.header("Filters")
 
-# Vehicle Type Filter (Primary KPI Filter)
-vehicle_options = ["All"] + sorted(df["Vehicle_Type"].dropna().unique().tolist())
-selected_vehicle = st.sidebar.selectbox(
-    "Vehicle Type",
-    vehicle_options
-)
+vehicle_options = ["All"] + sorted(df["Vehicle_Type"].dropna().unique())
+selected_vehicle = st.sidebar.selectbox("Vehicle Type", vehicle_options)
 
-# Booking Status Filter (Table-only filter)
-status_options = ["All"] + sorted(df["Booking_Status"].dropna().unique().tolist())
-selected_status = st.sidebar.selectbox(
-    "Booking Status",
-    status_options
-)
+status_options = ["All"] + sorted(df["Booking_Status"].dropna().unique())
+selected_status = st.sidebar.selectbox("Booking Status", status_options)
 
 # ---------------------------------------------------------
-# KPI DATASET (ONLY VEHICLE FILTER APPLIED)
+# APPLY FILTERS (ONLY ONCE)
 # ---------------------------------------------------------
-kpi_df = df.copy()
+filtered_df = df
 
 if selected_vehicle != "All":
-    kpi_df = kpi_df[
-        kpi_df["Vehicle_Type"] == selected_vehicle
+    filtered_df = filtered_df[
+        filtered_df["Vehicle_Type"] == selected_vehicle
+    ]
+
+# KPI dataset (before booking filter)
+kpi_df = filtered_df
+
+if selected_status != "All":
+    filtered_df = filtered_df[
+        filtered_df["Booking_Status"] == selected_status
     ]
 
 # ---------------------------------------------------------
-# KPI CALCULATIONS (LOGICALLY CORRECT)
+# KPI CALCULATIONS (FAST)
 # ---------------------------------------------------------
 total_rides = len(kpi_df)
 
-successful_rides = len(
-    kpi_df[kpi_df["Booking_Status"] == "Success"]
-)
-
-cancelled_rides = len(
-    kpi_df[kpi_df["Booking_Status"] != "Success"]
-)
+successful_rides = (kpi_df["Booking_Status"] == "Success").sum()
+cancelled_rides = total_rides - successful_rides
 
 cancellation_rate = (
     round((cancelled_rides / total_rides) * 100, 2)
@@ -77,18 +70,17 @@ cancellation_rate = (
 )
 
 # ---------------------------------------------------------
-# FORMAT NUMBERS (K / M)
+# NUMBER FORMATTER
 # ---------------------------------------------------------
 def format_number(num):
     if num >= 1_000_000:
         return f"{num/1_000_000:.1f}M"
     elif num >= 1_000:
         return f"{num/1_000:.1f}K"
-    else:
-        return str(num)
+    return str(num)
 
 # ---------------------------------------------------------
-# DISPLAY KPIs
+# KPI DISPLAY
 # ---------------------------------------------------------
 st.subheader("Executive Key Metrics")
 
@@ -101,47 +93,34 @@ col3.metric("Cancellation Rate (%)", cancellation_rate)
 st.divider()
 
 # ---------------------------------------------------------
-# POWER BI DASHBOARD (STATIC)
+# POWER BI (STATIC — DO NOT RELOAD UNNECESSARILY)
 # ---------------------------------------------------------
 st.subheader("Strategic Performance Dashboard")
 
-powerbi_url = "https://app.powerbi.com/view?r=eyJrIjoiZTI2OTQ0NTAtODg0NS00ZjUzLTg5NDItMDA2MWJjZjkyZWMzIiwidCI6ImM2ZTU0OWIzLTVmNDUtNDAzMi1hYWU5LWQ0MjQ0ZGM1YjJjNCJ9"
-
 components.iframe(
-    powerbi_url,
+    "https://app.powerbi.com/view?r=eyJrIjoiZTI2OTQ0NTAtODg0NS00ZjUzLTg5NDItMDA2MWJjZjkyZWMzIiwidCI6ImM2ZTU0OWIzLTVmNDUtNDAzMi1hYWU5LWQ0MjQ0ZGM1YjJjNCJ9",
     height=780
 )
 
 st.divider()
 
 # ---------------------------------------------------------
-# TABLE DATASET (BOTH FILTERS APPLIED)
-# ---------------------------------------------------------
-table_df = kpi_df.copy()
-
-if selected_status != "All":
-    table_df = table_df[
-        table_df["Booking_Status"] == selected_status
-    ]
-
-# ---------------------------------------------------------
-# DISPLAY TABLE
+# TABLE (LIMIT ROWS FOR SPEED)
 # ---------------------------------------------------------
 st.subheader("Operational Data Drill-down")
 
 st.dataframe(
-    table_df,
+    filtered_df,
     use_container_width=True,
     height=450
 )
 
 # ---------------------------------------------------------
-# REMOVE STREAMLIT FOOTER
+# CLEAN FOOTER
 # ---------------------------------------------------------
-hide_streamlit_style = """
+st.markdown("""
 <style>
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
 </style>
-"""
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
