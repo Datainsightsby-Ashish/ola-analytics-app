@@ -116,16 +116,17 @@ st.divider()
 # ---------------------------------------------------------
 # POWER BI DASHBOARD
 # ---------------------------------------------------------
-st.subheader("Strategic Performance Dashboard")
+base_url = "https://app.powerbi.com/view?r=eyJrIjoiZTI2OTQ0NTAtODg0NS00ZjUzLTg5NDItMDA2MWJjZjkyZWMzIiwidCI6ImM2ZTU0OWIzLTVmNDUtNDAzMi1hYWU5LWQ0MjQ0ZGM1YjJjNCJ9"
 
-powerbi_url = "https://app.powerbi.com/view?r=eyJrIjoiZTI2OTQ0NTAtODg0NS00ZjUzLTg5NDItMDA2MWJjZjkyZWMzIiwidCI6ImM2ZTU0OWIzLTVmNDUtNDAzMi1hYWU5LWQ0MjQ0ZGM1YjJjNCJ9"
+filter_query = ""
 
-components.iframe(
-    powerbi_url,
-    height=780
-)
+if status_filter:
+    selected = status_filter[0]  # single selection example
+    filter_query = f"&filter=rides/Booking_Status eq '{selected}'"
 
-st.divider()
+powerbi_url = base_url + filter_query
+
+components.iframe(powerbi_url, height=780)
 
 # ---------------------------------------------------------
 # DATA TABLE
@@ -148,3 +149,4 @@ footer {visibility: hidden;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
