@@ -95,8 +95,8 @@ cancelled_rides = len(
 )
 
 # Revenue calculation (if revenue column exists)
-if "Fare_Amount" in filtered_df.columns:
-    total_revenue = filtered_df["Fare_Amount"].sum()
+if "Booking_Value" in filtered_df.columns:
+    total_revenue = filtered_df["Booking_Value"].sum()
 else:
     total_revenue = 0
 
