@@ -2,54 +2,73 @@ import streamlit as st
 import streamlit.components.v1 as components
 import pandas as pd
 
-# --------------------------------------------------
-# PAGE CONFIG
-# --------------------------------------------------
+# ---------------------------------------------------------
+# PAGE CONFIGURATION
+# ---------------------------------------------------------
 st.set_page_config(
-    page_title="Ola Ride Analytics Dashboard",
+    page_title="Ride Operations & Revenue Intelligence",
     layout="wide"
 )
 
-st.title("🚖 SQL + Power BI Analytics App")
+# ---------------------------------------------------------
+# CUSTOM STYLING (Corporate Grey Theme)
+# ---------------------------------------------------------
+st.markdown("""
+<style>
+body {
+    background-color: #0f172a;
+}
+h1 {
+    font-size: 34px;
+    font-weight: 600;
+}
+.metric-container {
+    background-color: #1e293b;
+    padding: 18px;
+    border-radius: 8px;
+}
+</style>
+""", unsafe_allow_html=True)
 
-# --------------------------------------------------
-# LOAD DATA (FROM CSV FOR CLOUD DEPLOYMENT)
-# --------------------------------------------------
+# ---------------------------------------------------------
+# HEADER SECTION
+# ---------------------------------------------------------
+st.title("Ride Operations & Revenue Intelligence Dashboard")
+st.markdown(
+    "Operational performance and revenue analytics powered by structured ride data and executive-level BI reporting."
+)
+
+st.divider()
+
+# ---------------------------------------------------------
+# LOAD DATA (CSV for Cloud Deployment)
+# ---------------------------------------------------------
 @st.cache_data
 def load_data():
     return pd.read_csv("ola_cleaned.csv")
 
 df = load_data()
 
-# --------------------------------------------------
-# SIDEBAR FILTERS
-# --------------------------------------------------
-st.sidebar.header("🔎 Filters")
+# ---------------------------------------------------------
+# SIDEBAR FILTERS (Clean & Focused)
+# ---------------------------------------------------------
+st.sidebar.header("Filters")
 
-# Search
-search_term = st.sidebar.text_input("Search Anything")
+# Booking Status
+status_filter = st.sidebar.multiselect(
+    "Booking Status",
+    options=sorted(df["Booking_Status"].dropna().unique())
+)
 
-# Booking Status Filter
-if "Booking_Status" in df.columns:
-    status_filter = st.sidebar.multiselect(
-        "Booking Status",
-        options=df["Booking_Status"].unique()
-    )
-else:
-    status_filter = []
+# Vehicle Type
+vehicle_filter = st.sidebar.multiselect(
+    "Vehicle Type",
+    options=sorted(df["Vehicle_Type"].dropna().unique())
+)
 
-# Vehicle Type Filter
-if "Vehicle_Type" in df.columns:
-    vehicle_filter = st.sidebar.multiselect(
-        "Vehicle Type",
-        options=df["Vehicle_Type"].unique()
-    )
-else:
-    vehicle_filter = []
-
-# --------------------------------------------------
+# ---------------------------------------------------------
 # APPLY FILTERS
-# --------------------------------------------------
+# ---------------------------------------------------------
 filtered_df = df.copy()
 
 if status_filter:
@@ -62,55 +81,62 @@ if vehicle_filter:
         filtered_df["Vehicle_Type"].isin(vehicle_filter)
     ]
 
-if search_term:
-    filtered_df = filtered_df[
-        filtered_df.apply(
-            lambda row: search_term.lower() in str(row).lower(),
-            axis=1
-        )
-    ]
+# ---------------------------------------------------------
+# KPI CALCULATIONS
+# ---------------------------------------------------------
+total_rides = len(filtered_df)
 
-# --------------------------------------------------
-# KPI SECTION
-# --------------------------------------------------
-st.subheader("📊 Key Metrics")
-
-total_bookings = len(filtered_df)
-
-if "Booking_Status" in filtered_df.columns:
-    cancelled = len(filtered_df[
-        filtered_df["Booking_Status"] != "Success"
-    ])
-else:
-    cancelled = 0
-
-success_rate = (
-    round((total_bookings - cancelled) / total_bookings * 100, 2)
-    if total_bookings > 0 else 0
+successful_rides = len(
+    filtered_df[filtered_df["Booking_Status"] == "Success"]
 )
 
-col1, col2, col3 = st.columns(3)
+cancelled_rides = len(
+    filtered_df[filtered_df["Booking_Status"] != "Success"]
+)
 
-col1.metric("Total Bookings", total_bookings)
-col2.metric("Cancelled Rides", cancelled)
-col3.metric("Success Rate (%)", success_rate)
+# Revenue calculation (if revenue column exists)
+if "Fare_Amount" in filtered_df.columns:
+    total_revenue = filtered_df["Fare_Amount"].sum()
+else:
+    total_revenue = 0
 
-# --------------------------------------------------
-# POWER BI DASHBOARD (MAIN INSIGHT SECTION)
-# --------------------------------------------------
-st.subheader("📈 Power BI Dashboard")
+cancellation_rate = (
+    round((cancelled_rides / total_rides) * 100, 2)
+    if total_rides > 0 else 0
+)
+
+# ---------------------------------------------------------
+# KPI DISPLAY (Executive Layout)
+# ---------------------------------------------------------
+st.subheader("Executive Key Metrics")
+
+col1, col2, col3, col4 = st.columns(4)
+
+col1.metric("Total Revenue", f"{total_revenue:,.0f}")
+col2.metric("Total Rides", f"{total_rides:,}")
+col3.metric("Successful Rides", f"{successful_rides:,}")
+col4.metric("Cancellation Rate (%)", cancellation_rate)
+
+st.divider()
+
+# ---------------------------------------------------------
+# POWER BI EMBED (Primary Insight Section)
+# ---------------------------------------------------------
+st.subheader("Strategic Performance Dashboard")
 
 powerbi_url = "https://app.powerbi.com/view?r=eyJrIjoiZTI2OTQ0NTAtODg0NS00ZjUzLTg5NDItMDA2MWJjZjkyZWMzIiwidCI6ImM2ZTU0OWIzLTVmNDUtNDAzMi1hYWU5LWQ0MjQ0ZGM1YjJjNCJ9"
 
 components.iframe(
     powerbi_url,
-    height=750
+    height=780
 )
 
-# --------------------------------------------------
-# SQL DATA TABLE (DRILL-DOWN)
-# --------------------------------------------------
-st.subheader("🗂 Detailed Ride Data")
+st.divider()
+
+# ---------------------------------------------------------
+# DETAILED DATA TABLE (Drill-down Layer)
+# ---------------------------------------------------------
+st.subheader("Operational Data Drill-down")
 
 st.dataframe(
     filtered_df,
@@ -118,9 +144,9 @@ st.dataframe(
     height=450
 )
 
-# --------------------------------------------------
-# OPTIONAL CLEAN UI
-# --------------------------------------------------
+# ---------------------------------------------------------
+# REMOVE STREAMLIT DEFAULT FOOTER
+# ---------------------------------------------------------
 hide_streamlit_style = """
 <style>
 #MainMenu {visibility: hidden;}
