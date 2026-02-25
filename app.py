@@ -98,7 +98,7 @@ st.divider()
 st.subheader("Strategic Performance Dashboard")
 
 components.iframe(
-    "https://app.powerbi.com/view?r=eyJrIjoiZTI2OTQ0NTAtODg0NS00ZjUzLTg5NDItMDA2MWJjZjkyZWMzIiwidCI6ImM2ZTU0OWIzLTVmNDUtNDAzMi1hYWU5LWQ0MjQ0ZGM1YjJjNCJ9",
+    "https://app.powerbi.com/view?r=eyJrIjoiZDZlYmIwN2UtYjExOC00ZTM1LTkyY2EtYWY1YjVhYmMyYzQ4IiwidCI6ImM2ZTU0OWIzLTVmNDUtNDAzMi1hYWU5LWQ0MjQ0ZGM1YjJjNCJ9"
     height=780
 )
 
@@ -124,3 +124,4 @@ st.markdown("""
 footer {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
+
