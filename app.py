@@ -30,50 +30,45 @@ def load_data():
 df = load_data()
 
 # ---------------------------------------------------------
-# SIDEBAR FILTERS (AUTO-CLOSE SELECTBOX VERSION)
+# SIDEBAR FILTERS
 # ---------------------------------------------------------
 st.sidebar.header("Filters")
 
-# Booking Status Filter
-status_options = ["All"] + sorted(df["Booking_Status"].dropna().unique().tolist())
-selected_status = st.sidebar.selectbox(
-    "Booking Status",
-    status_options
-)
-
-# Vehicle Type Filter
+# Vehicle Type Filter (Primary KPI Filter)
 vehicle_options = ["All"] + sorted(df["Vehicle_Type"].dropna().unique().tolist())
 selected_vehicle = st.sidebar.selectbox(
     "Vehicle Type",
     vehicle_options
 )
 
-# ---------------------------------------------------------
-# APPLY FILTERS
-# ---------------------------------------------------------
-filtered_df = df.copy()
+# Booking Status Filter (Table-only filter)
+status_options = ["All"] + sorted(df["Booking_Status"].dropna().unique().tolist())
+selected_status = st.sidebar.selectbox(
+    "Booking Status",
+    status_options
+)
 
-if selected_status != "All":
-    filtered_df = filtered_df[
-        filtered_df["Booking_Status"] == selected_status
-    ]
+# ---------------------------------------------------------
+# KPI DATASET (ONLY VEHICLE FILTER APPLIED)
+# ---------------------------------------------------------
+kpi_df = df.copy()
 
 if selected_vehicle != "All":
-    filtered_df = filtered_df[
-        filtered_df["Vehicle_Type"] == selected_vehicle
+    kpi_df = kpi_df[
+        kpi_df["Vehicle_Type"] == selected_vehicle
     ]
 
 # ---------------------------------------------------------
-# KPI CALCULATIONS
+# KPI CALCULATIONS (LOGICALLY CORRECT)
 # ---------------------------------------------------------
-total_rides = len(filtered_df)
+total_rides = len(kpi_df)
 
 successful_rides = len(
-    filtered_df[filtered_df["Booking_Status"] == "Success"]
+    kpi_df[kpi_df["Booking_Status"] == "Success"]
 )
 
 cancelled_rides = len(
-    filtered_df[filtered_df["Booking_Status"] != "Success"]
+    kpi_df[kpi_df["Booking_Status"] != "Success"]
 )
 
 cancellation_rate = (
@@ -93,7 +88,7 @@ def format_number(num):
         return str(num)
 
 # ---------------------------------------------------------
-# KPI DISPLAY
+# DISPLAY KPIs
 # ---------------------------------------------------------
 st.subheader("Executive Key Metrics")
 
@@ -106,7 +101,7 @@ col3.metric("Cancellation Rate (%)", cancellation_rate)
 st.divider()
 
 # ---------------------------------------------------------
-# POWER BI DASHBOARD (STATIC EMBED)
+# POWER BI DASHBOARD (STATIC)
 # ---------------------------------------------------------
 st.subheader("Strategic Performance Dashboard")
 
@@ -120,12 +115,22 @@ components.iframe(
 st.divider()
 
 # ---------------------------------------------------------
-# DATA TABLE
+# TABLE DATASET (BOTH FILTERS APPLIED)
+# ---------------------------------------------------------
+table_df = kpi_df.copy()
+
+if selected_status != "All":
+    table_df = table_df[
+        table_df["Booking_Status"] == selected_status
+    ]
+
+# ---------------------------------------------------------
+# DISPLAY TABLE
 # ---------------------------------------------------------
 st.subheader("Operational Data Drill-down")
 
 st.dataframe(
-    filtered_df,
+    table_df,
     use_container_width=True,
     height=450
 )
