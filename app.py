@@ -6,7 +6,7 @@ import pandas as pd
 # PAGE CONFIGURATION
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="Ride Operations & Revenue Intelligence",
+    page_title="OLA Ride Operations & Revenue Intelligence",
     layout="wide"
 )
 
@@ -25,7 +25,7 @@ h1 {
 # ---------------------------------------------------------
 # HEADER
 # ---------------------------------------------------------
-st.title("Ride Operations & Revenue Intelligence Dashboard")
+st.title("OLA Ride Operations & Revenue Intelligence Dashboard")
 st.markdown(
     "Operational performance analytics integrating structured ride data with executive-level BI reporting."
 )
@@ -149,4 +149,5 @@ footer {visibility: hidden;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 
