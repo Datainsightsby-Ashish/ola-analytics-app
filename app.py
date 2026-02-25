@@ -6,26 +6,14 @@ import pandas as pd
 # PAGE CONFIGURATION
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="OLA Ride Operations & Revenue Intelligence",
+    page_title="Ride Operations & Revenue Intelligence",
     layout="wide"
 )
 
 # ---------------------------------------------------------
-# CLEAN CORPORATE STYLING
-# ---------------------------------------------------------
-st.markdown("""
-<style>
-h1 {
-    font-size: 34px;
-    font-weight: 600;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ---------------------------------------------------------
 # HEADER
 # ---------------------------------------------------------
-st.title("OLA Ride Operations & Revenue Intelligence Dashboard")
+st.title("Ride Operations & Revenue Intelligence Dashboard")
 st.markdown(
     "Operational performance analytics integrating structured ride data with executive-level BI reporting."
 )
@@ -42,18 +30,22 @@ def load_data():
 df = load_data()
 
 # ---------------------------------------------------------
-# SIDEBAR FILTERS
+# SIDEBAR FILTERS (AUTO-CLOSE SELECTBOX VERSION)
 # ---------------------------------------------------------
 st.sidebar.header("Filters")
 
-status_filter = st.sidebar.multiselect(
+# Booking Status Filter
+status_options = ["All"] + sorted(df["Booking_Status"].dropna().unique().tolist())
+selected_status = st.sidebar.selectbox(
     "Booking Status",
-    options=sorted(df["Booking_Status"].dropna().unique())
+    status_options
 )
 
-vehicle_filter = st.sidebar.multiselect(
+# Vehicle Type Filter
+vehicle_options = ["All"] + sorted(df["Vehicle_Type"].dropna().unique().tolist())
+selected_vehicle = st.sidebar.selectbox(
     "Vehicle Type",
-    options=sorted(df["Vehicle_Type"].dropna().unique())
+    vehicle_options
 )
 
 # ---------------------------------------------------------
@@ -61,14 +53,14 @@ vehicle_filter = st.sidebar.multiselect(
 # ---------------------------------------------------------
 filtered_df = df.copy()
 
-if status_filter:
+if selected_status != "All":
     filtered_df = filtered_df[
-        filtered_df["Booking_Status"].isin(status_filter)
+        filtered_df["Booking_Status"] == selected_status
     ]
 
-if vehicle_filter:
+if selected_vehicle != "All":
     filtered_df = filtered_df[
-        filtered_df["Vehicle_Type"].isin(vehicle_filter)
+        filtered_df["Vehicle_Type"] == selected_vehicle
     ]
 
 # ---------------------------------------------------------
@@ -114,19 +106,18 @@ col3.metric("Cancellation Rate (%)", cancellation_rate)
 st.divider()
 
 # ---------------------------------------------------------
-# POWER BI DASHBOARD
+# POWER BI DASHBOARD (STATIC EMBED)
 # ---------------------------------------------------------
-base_url = "https://app.powerbi.com/view?r=eyJrIjoiZTI2OTQ0NTAtODg0NS00ZjUzLTg5NDItMDA2MWJjZjkyZWMzIiwidCI6ImM2ZTU0OWIzLTVmNDUtNDAzMi1hYWU5LWQ0MjQ0ZGM1YjJjNCJ9"
+st.subheader("Strategic Performance Dashboard")
 
-filter_query = ""
+powerbi_url = "https://app.powerbi.com/view?r=eyJrIjoiZTI2OTQ0NTAtODg0NS00ZjUzLTg5NDItMDA2MWJjZjkyZWMzIiwidCI6ImM2ZTU0OWIzLTVmNDUtNDAzMi1hYWU5LWQ0MjQ0ZGM1YjJjNCJ9"
 
-if status_filter:
-    selected = status_filter[0]  # single selection example
-    filter_query = f"&filter=rides/Booking_Status eq '{selected}'"
+components.iframe(
+    powerbi_url,
+    height=780
+)
 
-powerbi_url = base_url + filter_query
-
-components.iframe(powerbi_url, height=780)
+st.divider()
 
 # ---------------------------------------------------------
 # DATA TABLE
@@ -149,5 +140,3 @@ footer {visibility: hidden;}
 </style>
 """
 st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
-
