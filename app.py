@@ -94,12 +94,6 @@ cancelled_rides = len(
     filtered_df[filtered_df["Booking_Status"] != "Success"]
 )
 
-# Revenue calculation (if revenue column exists)
-if "Booking_Value" in filtered_df.columns:
-    total_revenue = filtered_df["Booking_Value"].sum()
-else:
-    total_revenue = 0
-
 cancellation_rate = (
     round((cancelled_rides / total_rides) * 100, 2)
     if total_rides > 0 else 0
