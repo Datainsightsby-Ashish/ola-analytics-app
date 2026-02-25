@@ -11,37 +11,29 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# CUSTOM STYLING (Corporate Grey Theme)
+# CLEAN CORPORATE STYLING
 # ---------------------------------------------------------
 st.markdown("""
 <style>
-body {
-    background-color: #0f172a;
-}
 h1 {
     font-size: 34px;
     font-weight: 600;
-}
-.metric-container {
-    background-color: #1e293b;
-    padding: 18px;
-    border-radius: 8px;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------------------------------------------------
-# HEADER SECTION
+# HEADER
 # ---------------------------------------------------------
 st.title("Ride Operations & Revenue Intelligence Dashboard")
 st.markdown(
-    "Operational performance and revenue analytics powered by structured ride data and executive-level BI reporting."
+    "Operational performance analytics integrating structured ride data with executive-level BI reporting."
 )
 
 st.divider()
 
 # ---------------------------------------------------------
-# LOAD DATA (CSV for Cloud Deployment)
+# LOAD DATA
 # ---------------------------------------------------------
 @st.cache_data
 def load_data():
@@ -50,17 +42,15 @@ def load_data():
 df = load_data()
 
 # ---------------------------------------------------------
-# SIDEBAR FILTERS (Clean & Focused)
+# SIDEBAR FILTERS
 # ---------------------------------------------------------
 st.sidebar.header("Filters")
 
-# Booking Status
 status_filter = st.sidebar.multiselect(
     "Booking Status",
     options=sorted(df["Booking_Status"].dropna().unique())
 )
 
-# Vehicle Type
 vehicle_filter = st.sidebar.multiselect(
     "Vehicle Type",
     options=sorted(df["Vehicle_Type"].dropna().unique())
@@ -100,21 +90,31 @@ cancellation_rate = (
 )
 
 # ---------------------------------------------------------
-# KPI DISPLAY (Executive Layout)
+# FORMAT NUMBERS (K / M)
+# ---------------------------------------------------------
+def format_number(num):
+    if num >= 1_000_000:
+        return f"{num/1_000_000:.1f}M"
+    elif num >= 1_000:
+        return f"{num/1_000:.1f}K"
+    else:
+        return str(num)
+
+# ---------------------------------------------------------
+# KPI DISPLAY
 # ---------------------------------------------------------
 st.subheader("Executive Key Metrics")
 
-col1, col2, col3, col4 = st.columns(4)
+col1, col2, col3 = st.columns(3)
 
-col1.metric("Total Revenue", f"{total_revenue:,.0f}")
-col2.metric("Total Rides", f"{total_rides:,}")
-col3.metric("Successful Rides", f"{successful_rides:,}")
-col4.metric("Cancellation Rate (%)", cancellation_rate)
+col1.metric("Total Rides", format_number(total_rides))
+col2.metric("Successful Rides", format_number(successful_rides))
+col3.metric("Cancellation Rate (%)", cancellation_rate)
 
 st.divider()
 
 # ---------------------------------------------------------
-# POWER BI EMBED (Primary Insight Section)
+# POWER BI DASHBOARD
 # ---------------------------------------------------------
 st.subheader("Strategic Performance Dashboard")
 
@@ -128,7 +128,7 @@ components.iframe(
 st.divider()
 
 # ---------------------------------------------------------
-# DETAILED DATA TABLE (Drill-down Layer)
+# DATA TABLE
 # ---------------------------------------------------------
 st.subheader("Operational Data Drill-down")
 
@@ -139,7 +139,7 @@ st.dataframe(
 )
 
 # ---------------------------------------------------------
-# REMOVE STREAMLIT DEFAULT FOOTER
+# REMOVE STREAMLIT FOOTER
 # ---------------------------------------------------------
 hide_streamlit_style = """
 <style>
